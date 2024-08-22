@@ -4,7 +4,7 @@ const {createResult,getAllResults,getResult} = require("../controllers/resultCon
 const authMiddleware = require('../middlewares/authMiddleware');
 
 
-//router.route("").post(authMiddleware,createResult)
+router.route("").post(authMiddleware,createResult)
 router.route("/all").get(authMiddleware,getAllResults)
 router.route("/").get(authMiddleware,getResult)
 
