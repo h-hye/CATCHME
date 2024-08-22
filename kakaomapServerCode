@@ -1,0 +1,85 @@
+const express = require('express');
+const fetch = require('node-fetch');
+const cors = require('cors');
+const app = express();
+const port = 3000;
+
+const KAKAO_REST_API_KEY = 'c734d7df28d0aabfafcb2e622d57e6c5'; // 카카오 REST API 키
+
+app.use(cors());
+app.use(express.json());
+
+app.get('/memberinfo/updatepassword',requireLogin,async function(req,res){
+  res.sendFile(__dirname + '/views/maps.html');
+});
+
+app.get('/searchHospitals', async (req, res) => {
+
+  //앱으로부터 사용자의 위치를 받음
+  const { latitude, longitude, query } = req.query;
+  //반경 5km내 안에서 찾기
+  const radius = 5000;
+
+  try {
+    const response = await fetch(
+      `https://dapi.kakao.com/v2/local/search/keyword.json?query=${encodeURIComponent(query)}&x=${longitude}&y=${latitude}&radius=${radius}`,
+      {
+        headers: {
+          Authorization: `KakaoAK ${KAKAO_REST_API_KEY}`
+        }
+      }
+    );
+
+    const data = await response.json();
+    res.json(data.documents); // 병원 목록
+  } catch (error) {
+    console.error(error);
+    res.status(500).send('서버 오류');
+  }
+});
+
+app.get('/mapUrl', (req, res) => {
+  const { latitude, longitude, markers } = req.query;
+
+  const markersScript = markers
+    .map(marker => `
+      new kakao.maps.Marker({
+        position: new kakao.maps.LatLng(${marker.y}, ${marker.x}),
+        map: map,
+        title: "${marker.place_name}"
+      });
+    `)
+    .join('');
+
+
+  //이게 지금 문제야..html 을 따로 처리하고 싶은데 동적으로 변수를 받는 html 을 처리하는 방법이라 해야하나 ? ?? ?
+  const html = `
+    <html>
+      <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script type="text/javascript" src="https://dapi.kakao.com/v2/maps/sdk.js?appkey=${KAKAO_REST_API_KEY}&libraries=services"></script>
+        <script>
+          function initMap() {
+            const container = document.getElementById('map');
+            const options = {
+              center: new kakao.maps.LatLng(${latitude}, ${longitude}),
+              level: 3
+            };
+            const map = new kakao.maps.Map(container, options);
+            ${markersScript}
+          }
+        </script>
+      </head>
+      <body onload="initMap()">
+        <div id="map" style="width:100%;height:100%;"></div>
+      </body>
+    </html>
+  `;
+
+  res.setHeader('Content-Type', 'text/html');
+  res.send(html);
+});
+
+app.listen(port, () => {
+  console.log(`Server running at http://localhost:${port}`);
+});
