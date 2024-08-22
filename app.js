@@ -40,10 +40,10 @@ app.get("/", (req, res) => {
 });
 
 // 라우터 설정
-//app.use("/contacts", require("./routes/contactRoute"));
 //app.use("/rawdatas", require("./routes/rawDataRoute"));
 //app.use("/result", require("./routes/resultRoute"));
 app.use("/", require("./routes/kakaoLoginRoute"));
+app.use('/', require('./routes/userRoute'));
 
 // 서버 시작
 app.listen(3000, () => {
