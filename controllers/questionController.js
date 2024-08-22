@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const questionService = require('../services/questionService');
+const Question = require("../models/questionModel");
 
 const processResults = asyncHandler(async (req, res) => {
     const userId = req.session.userId;
@@ -16,6 +17,18 @@ const processResults = asyncHandler(async (req, res) => {
     res.status(200).send(result);
 });
 
+// @desc Get all results by userId
+// @route GET /results
+// 전체 결과 보기
+const getAllQuestionResults = asyncHandler(async (req, res) => {
+    const userId = req.session.userId;
+    
+    // userId 일치하는 모든 문서 검색
+    const questionResults = await Question.find({ userId });
+    res.status(200).json(questionResults);
+});
+
 module.exports = {
-    processResults
+    processResults,
+    getAllQuestionResults
 };
