@@ -24,20 +24,20 @@ app.use(cors()); // CORS 설정
 app.use(bodyParser.json()); // JSON 데이터 파싱
 
 // 기본 라우트: 로그인 여부 확인
-app.get("/", (req, res) => {
-    console.log('Session data:', req.session);
+// app.get("/", (req, res) => {
+//     console.log('Session data:', req.session);
 
-    if (req.session.userId) {
-        res.send(`Logged in as ${req.session.userId}`);
-    } else {
-        res.send(`
-            <script>
-                alert('로그인되어있지 않습니다.');
-                window.location.href = '/login/kakao';
-            </script>
-        `);
-    }
-});
+//     if (req.session.userId) {
+//         res.send(`Logged in as ${req.session.userId}`);
+//     } else {
+//         res.send(`
+//             <script>
+//                 alert('로그인되어있지 않습니다.');
+//                 window.location.href = '/login/kakao';
+//             </script>
+//         `);
+//     }
+// });
 
 // 라우터 설정
 //app.use("/contacts", require("./routes/contactRoute"));
