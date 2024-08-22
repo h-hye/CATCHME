@@ -27,3 +27,22 @@ exports.logout = asyncHandler((req, res) => { //logout export
         res.redirect('/'); //홈으로 redirect
     });
 });
+
+exports.deleteUser = asyncHandler(async (req, res) => {
+    try {
+        const user = await User.findByIdAndDelete(req.session.userId); // DB에서 사용자 삭제
+
+        if (!user) {
+            return res.status(404).send('사용자를 찾을 수 없습니다.');
+        }
+
+        req.session.destroy((err) => { // 회원 탈퇴 후 세션 파괴하여 로그아웃 처리
+            if (err) {
+                return res.status(500).send('로그아웃 중 오류가 발생했습니다.');
+            }
+            res.status(200).send('회원 탈퇴가 완료되었습니다.');
+        });
+    } catch (error) {
+        res.status(500).send('회원 탈퇴 중 오류가 발생했습니다.');
+    }
+});
