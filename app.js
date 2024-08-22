@@ -41,7 +41,7 @@ app.get("/", (req, res) => {
 
 // 라우터 설정
 //app.use("/rawdatas", require("./routes/rawDataRoute"));
-//app.use("/result", require("./routes/resultRoute"));
+app.use("/result", require("./routes/resultRoute"));
 app.use("/", require("./routes/kakaoLoginRoute"));
 app.use('/', require('./routes/userRoute'));
 
