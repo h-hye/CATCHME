@@ -45,6 +45,7 @@ app.use("/result", require("./routes/resultRoute"));
 app.use("/", require("./routes/kakaoLoginRoute"));
 app.use('/', require('./routes/userRoute'));
 app.use('/', require('./routes/questionRoute'));
+app.use('/', require('./routes/kakaoMapRoute'));
 
 // 서버 시작
 app.listen(3000, () => {
