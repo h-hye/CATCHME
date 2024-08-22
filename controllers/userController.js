@@ -18,3 +18,12 @@ exports.updateUserInfo = asyncHandler(async (req, res) => {
     }
     res.send("사용자 정보를 업데이트 하였습니다.");
 });
+
+exports.logout = asyncHandler((req, res) => { //logout export
+    req.session.destroy(err => { //세션 destroy
+        if (err) {
+            return res.status(500).send('로그아웃 중 오류가 발생했습니다.');
+        }
+        res.redirect('/'); //홈으로 redirect
+    });
+});
