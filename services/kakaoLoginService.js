@@ -1,7 +1,7 @@
 const axios = require('axios');
 const qs = require('qs');
 const { authURL, tokenURL, userInfoURL, clientId, redirectUri } = require('../config/kakaoLogin');
-const User = require('../models/userModel');
+const User = require('../models/memberModel');
 
 const getAuthURL = () => `${authURL}?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=code`;
 
