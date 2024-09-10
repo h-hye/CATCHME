@@ -47,6 +47,15 @@ const userSchema = new mongoose.Schema({
         unique: true, // 각 사용자는 고유한 카카오 ID를 가집니다.
         sparse: true // 이 필드는 비어 있을 수 있습니다.
     },
+    ageRange: {
+        type: String,
+        enum: [
+            '1-9', '10-14', '15-19', '20-29', 
+            '30-39', '40-49', '50-59', 
+            '60-69', '70-79', '80-89', '90-'
+        ], // 유효한 연령대 범위
+        required: true // ageRange를 필수로 지정
+    },
 });
 
 const User = mongoose.model('User', userSchema);
