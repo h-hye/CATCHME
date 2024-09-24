@@ -1,9 +1,4 @@
-
-// 1.사용자 위치를 gps 기능으로 받고 => 위도 경도 값 얻음
-// 2. 받은 위도 경도 값을 카카오map 한테 보내서? 위치를 기반으로 조건에 맞는 병원 찾음
-// 3. 웹뷰(uri 로 ) 로 앱에 보여주기
-//4. 리스트로 나온 병원들을 클릭하면, 카카오map에서 그 해당병원 검색 url 로 이동하기(지도에 병원리스트를 띄우는 걸 아직 진행중이라 이런것도 해봤습니다)
-
+// GPS 로 사용자 위치 받고 => 병원 검색하는 페이지
 
 import React, { useEffect, useState } from 'react';
 import Geolocation from 'react-native-geolocation-service';
@@ -12,14 +7,14 @@ import WebView from 'react-native-webview';
 
 const KAKAO_REST_API_KEY = 'c734d7df28d0aabfafcb2e622d57e6c5'; // 카카오 REST API 키
 
-function TesttScreen() {
+function KakaoMapScren() {
   const [location, setLocation] = useState(null);
   const [hospitals, setHospitals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [mapUrl, setMapUrl] = useState(''); // 지도 URL을 저장할 상태
 
   useEffect(() => {
-    //위치 권한 받기!!!
+    //위치 권한 받기(GPS)
     const requestLocationPermission = async () => {
       if (Platform.OS === 'android') {
         const granted = await PermissionsAndroid.request(
@@ -41,8 +36,7 @@ function TesttScreen() {
       getLocation();
     };
 
-
-    //위치 정보 얻기!! 경도/위도 값
+    //위치 정보 얻기: 경도/위도 값
     const getLocation = () => {
       Geolocation.getCurrentPosition(
         async (position) => {
@@ -51,10 +45,10 @@ function TesttScreen() {
           //여기에다 사용자의 위치정보 저장됨
           setLocation({ latitude, longitude });
 
-          // 병원 검색 (치매 또는 신경과 라는 단어를 포함한) 각자 3개씩 (거리 짧은 순으로)
+          // 병원 검색
           const [dementiaHospitals, neurologyHospitals] = await Promise.all([
-            searchHospitalsNearby(latitude, longitude, '치매'),
-            searchHospitalsNearby(latitude, longitude, '신경과'),
+            searchHospitalsNearby(latitude, longitude, '삼겹살'),
+            searchHospitalsNearby(latitude, longitude, '병원'),
           ]);
 
           // 거리 기준으로 정렬 후 상위 6개 선택
@@ -66,7 +60,15 @@ function TesttScreen() {
             .sort((a, b) => a.distance - b.distance)
             .slice(0, 6); // 상위 6개 선택
 
-          setHospitals(hospitalsWithDistance);
+            //검색결과가 6개 미만일 경우
+            if (hospitalsWithDistance.length < 6) {
+              const emptySlots = Array(6 - hospitalsWithDistance.length).fill({ isEmpty: true });
+              setHospitals([...hospitalsWithDistance, ...emptySlots]);
+            } else {
+              setHospitals(hospitalsWithDistance);
+            }  
+
+        
 
           setLoading(false);
         },
@@ -85,7 +87,7 @@ function TesttScreen() {
     requestLocationPermission();
   }, []);
 
-
+// 조건에 맞는 장소 검색
   const searchHospitalsNearby = async (latitude, longitude, query) => {
     const radius = 5000;
 
@@ -100,6 +102,7 @@ function TesttScreen() {
       );
 
       const data = await response.json();
+      console.log(data.documents[0]);
       return data.documents; // 병원 목록
     } catch (error) {
       console.error(error);
@@ -107,8 +110,7 @@ function TesttScreen() {
     }
   };
 
-
-  //거리 계산 용도
+  // 거리 계산 용도
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
     const toRad = (value) => (value * Math.PI) / 180;
     const R = 6371; // Radius of the Earth in km
@@ -122,12 +124,16 @@ function TesttScreen() {
     return R * c; // Distance in km
   };
 
-  const handleHospitalClick = (placeUrl) => {
-    setMapUrl(placeUrl); // 클릭한 병원의 URL을 설정
+// 검색 결과 클릭 시 나오는 결과
+  const handleHospitalClick = (hospital) => {
+    const { x, y, place_name } = hospital;
+    const mapUrl = `https://map.kakao.com/?urlX=${x}&urlY=${y}&urlLevel=3&markerCoords=${y},${x}&markerText=${encodeURIComponent(place_name)}`;
+    setMapUrl(mapUrl); // 클릭한 병원의 URL을 설정
   };
 
+// 검색 결과 나오게 하는 방법
   const renderItem = ({ item }) => (
-    <TouchableOpacity onPress={() => handleHospitalClick(item.place_url)}>
+    <TouchableOpacity onPress={() => handleHospitalClick(item)}>
       <View style={styles.item}>
         <Text style={styles.title}>{item.place_name}</Text>
         <Text>{item.address_name}</Text>
@@ -136,45 +142,49 @@ function TesttScreen() {
     </TouchableOpacity>
   );
 
+//화면에 띄우기
   return (
     <SafeAreaView style={styles.container}>
       {loading ? (
         <ActivityIndicator size="large" color="#0000ff" />
       ) : (
         <>
-          {mapUrl ? (
+          <View style={styles.webviewContainer}>
             <WebView
               originWhitelist={['*']}
-              source={{ uri: mapUrl }} // 여기가 웹뷰 띄우는 부분인데 여기가 문제가 나
+              source={{ uri: mapUrl }}
               style={styles.webview}
               javaScriptEnabled={true}
               onLoadEnd={() => console.log("WebView has finished loading")}
               onError={(error) => console.error("WebView error: ", error)}
               startInLoadingState={true}
             />
-          ) : (
-            <FlatList
-              data={hospitals}
-              renderItem={renderItem}
-              keyExtractor={(item) => item.id}
-              style={styles.list}
-            />
-          )}
+          </View>
+          <FlatList
+            data={hospitals}
+            renderItem={renderItem}
+            keyExtractor={(item) => item.id}
+            style={styles.list}
+          />
         </>
       )}
     </SafeAreaView>
   );
 }
 
+//스타일
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  webviewContainer: {
+    flex: 1,
+  },
   webview: {
-    flex: 1, // 지도는 전체 화면을 차지하도록 설정
+    flex: 1,
   },
   list: {
-    flex: 1, // 목록은 전체 화면을 차지하도록 설정
+    flex: 1,
     margin: 10,
   },
   item: {
@@ -188,4 +198,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default TesttScreen;
+export default KakaoMapScren;
